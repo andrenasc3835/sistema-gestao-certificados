@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Importar Dados{% endblock %}
+{% block content %}
+<h1 class="page-title">Importar Dados</h1>
+<p class="subtitle muted">Carregue um Excel/CSV com colunas <b>DDZ, Escola, Professor, Ano, Turma</b>.</p>
+
+<section class="card span-6">
+    <form method="post" action="/importar/excel" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".xlsx,.csv" required>
+        <button class="btn" type="submit">Importar</button>
+    </form>
+</section>
+{% endblock %}

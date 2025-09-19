@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Anos · Certificados{% endblock %}
+{% block content %}
+<h1 class="page-title">Anos</h1>
+<p class="subtitle muted">Cadastre os anos de certificação (ex.: 2024, 2025).</p>
+
+<div class="row">
+    <section class="card span-6">
+        <div class="section-head">
+            <h2 class="section-title">Cadastrar Ano</h2>
+        </div>
+        <form method="post" action="/anos">
+            <label>Ano</label><br />
+            <input name="valor" type="number" placeholder="2025" required>
+            <button class="btn" type="submit" style="margin-left:8px;">Salvar</button>
+        </form>
+    </section>
+
+    <section class="card span-12" style="margin-top:14px;">
+        <div class="section-head">
+            <h2 class="section-title">Lista de Anos</h2>
+            <span class="tag">{{ anos|length if anos else 0 }} registro(s)</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Ano</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in anos %}
+                    <tr>
+                        <td>{{ a.id }}</td>
+                        <td>{{ a.valor }}</td>
+                        <td>
+                            <form class="inline" method="post" action="/anos/{{ a.id }}/delete"
+                                onsubmit="return confirm('Excluir ano {{ a.valor }}?')">
+                                <button class="btn btn-danger" type="submit">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="muted">Sem registros</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

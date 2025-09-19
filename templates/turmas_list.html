@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Turmas · Certificados{% endblock %}
+{% block content %}
+<h1 class="page-title">Turmas</h1>
+<p class="subtitle muted">Turmas no formato <b>N/ANO</b> (ex.: 5/2025). Clique para expandir e ver os professores
+    certificados daquela turma.</p>
+
+<div class="row">
+    <section class="card span-6">
+        <div class="section-head">
+            <h2 class="section-title">Criar Turma</h2>
+        </div>
+        <form method="post" action="/turmas/create" onsubmit="return criarTurma(this);">
+            <label>Ano</label><br />
+            <select name="ano_valor" required>
+                <option value="">Selecione…</option>
+                {% for a in anos %}
+                <option value="{{ a.valor }}">{{ a.valor }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn" type="submit" style="margin-left:8px;">Adicionar</button>
+        </form>
+        <div id="createResp" class="muted" style="margin-top:8px;"></div>
+    </section>
+</div>
+
+<div class="row" style="margin-top:14px;">
+    <section class="card span-12">
+        <div class="section-head">
+            <h2 class="section-title">Turmas</h2>
+            <div class="right">
+                <span class="tag">{{ turmas|length if turmas else 0 }} registro(s)</span>
+            </div>
+        </div>
+
+        <div>
+            {% for t in turmas %}
+            <div class="accordion-item" data-label="{{ t.numero }}/{{ t.ano.valor }}">
+                <div class="accordion-head">
+                    <div><b>{{ t.numero }}/{{ t.ano.valor }}</b></div>
+                    <div class="muted">Clique para ver os professores</div>
+                </div>
+                <div class="accordion-body">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>DDZ</th>
+                                    <th>Escola</th>
+                                    <th>Professor</th>
+                                    <th>Ano</th>
+                                    <th>Turma</th>
+                                    <th>Cert.</th>
+                                </tr>
+                            </thead>
+                            <tbody class="tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="muted">Sem registros</div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function criarTurma(form) {
+        const fd = new FormData(form);
+        const res = await fetch(form.action, { method: 'POST', body: fd });
+        const data = await res.json();
+        const box = document.getElementById('createResp');
+        if (data.ok) { box.textContent = `Turma criada: ${data.turma.label}. Atualize a página para vê-la na lista.`; }
+        else { box.textContent = (data.error || 'Falha ao criar turma'); }
+        return false;
+    }
+
+    async function loadTurmaRows(label, tbody) {
+        const res = await fetch(`/api/visao-geral?turma=${encodeURIComponent(label)}`);
+        const data = await res.json();
+        tbody.innerHTML = '';
+        data.rows.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+      <td>${r.ddz}</td>
+      <td>${r.escola}</td>
+      <td>${r.professor}</td>
+      <td>${r.ano}</td>
+      <td>${r.turma}</td>
+      <td style="text-align:center;">${r.has_cert ? `<a href="/certificados/${r.cert_id}/download">📜</a>` : '—'}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.querySelectorAll('.accordion-item').forEach(acc => {
+        const head = acc.querySelector('.accordion-head');
+        const body = acc.querySelector('.accordion-body');
+        const tbody = acc.querySelector('.tbody');
+        head.addEventListener('click', async () => {
+            const open = body.style.display === 'block';
+            document.querySelectorAll('.accordion-body').forEach(b => b.style.display = 'none');
+            if (!open) {
+                body.style.display = 'block';
+                const label = acc.dataset.label;
+                await loadTurmaRows(label, tbody);
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}DDZ · Certificados{% endblock %}
+{% block content %}
+<h1 class="page-title">DDZ</h1>
+<p class="subtitle muted">Gerencie as zonas (DDZ). Cada escola pertence a uma DDZ.</p>
+
+<div class="row">
+    <section class="card span-6">
+        <div class="section-head">
+            <h2 class="section-title">Cadastrar DDZ</h2>
+        </div>
+        <form method="post" action="/ddz">
+            <label>Nome da DDZ</label><br />
+            <input name="nome" placeholder="Ex.: Zona Leste" required>
+            <button class="btn" type="submit" style="margin-left:8px;">Salvar</button>
+        </form>
+    </section>
+
+    <section class="card span-12" style="margin-top:14px;">
+        <div class="section-head">
+            <h2 class="section-title">Lista de DDZ</h2>
+            <span class="tag">{{ ddzs|length if ddzs else 0 }} registro(s)</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nome</th>
+                        <th style="width:220px">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in ddzs %}
+                    <tr>
+                        <td>{{ d.id }}</td>
+                        <td>
+                            <form class="inline" method="post" action="/ddz/{{ d.id }}/update">
+                                <input name="nome" value="{{ d.nome }}" required>
+                                <button class="btn" type="submit">Atualizar</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form class="inline" method="post" action="/ddz/{{ d.id }}/delete"
+                                onsubmit="return confirm('Excluir {{ d.nome }}?')">
+                                <button class="btn btn-danger" type="submit">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="muted">Sem registros</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

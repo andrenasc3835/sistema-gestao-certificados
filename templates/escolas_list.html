@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Escolas · Certificados{% endblock %}
+{% block content %}
+<h1 class="page-title">Escolas</h1>
+<p class="subtitle muted">Vincule cada escola à sua DDZ.</p>
+
+<div class="row">
+    <section class="card span-6">
+        <div class="section-head">
+            <h2 class="section-title">Cadastrar Escola</h2>
+        </div>
+        <form method="post" action="/escolas">
+            <label>Nome da Escola</label><br />
+            <input name="nome" placeholder="Ex.: Escola ABC" required><br /><br />
+            <label>DDZ</label><br />
+            <select name="ddz_id" required>
+                <option value="">Selecione...</option>
+                {% for d in ddzs %}
+                <option value="{{ d.id }}">{{ d.nome }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn" type="submit" style="margin-left:8px;">Salvar</button>
+        </form>
+    </section>
+
+    <section class="card span-12" style="margin-top:14px;">
+        <div class="section-head">
+            <h2 class="section-title">Lista de Escolas</h2>
+            <span class="tag">{{ escolas|length if escolas else 0 }} registro(s)</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Escola</th>
+                        <th>DDZ</th>
+                        <th style="width:320px">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in escolas %}
+                    <tr>
+                        <td>{{ e.id }}</td>
+                        <td>
+                            <form class="inline" method="post" action="/escolas/{{ e.id }}/update">
+                                <input name="nome" value="{{ e.nome }}" required>
+                                <select name="ddz_id" required>
+                                    {% for d in ddzs %}
+                                    <option value="{{ d.id }}" {% if d.id==e.ddz_id %}selected{% endif %}>{{ d.nome }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn" type="submit">Atualizar</button>
+                            </form>
+                        </td>
+                        <td>{{ e.ddz.nome if e.ddz else '—' }}</td>
+                        <td>
+                            <form class="inline" method="post" action="/escolas/{{ e.id }}/delete"
+                                onsubmit="return confirm('Excluir {{ e.nome }}?')">
+                                <button class="btn btn-danger" type="submit">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="muted">Sem registros</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Certificados · Certificados{% endblock %}
+{% block content %}
+<h1 class="page-title">Certificados</h1>
+<p class="subtitle muted">Gerencie os arquivos vinculados às certificações.</p>
+
+<div class="row">
+    <section class="card span-12">
+        <div class="section-head">
+            <div class="chips">
+                <a class="tag {% if view=='certificados' %}active{% endif %}"
+                    href="/certificados?view=certificados">Professores Certificados</a>
+                <a class="tag {% if view=='nao' %}active{% endif %}" href="/certificados?view=nao">Professores Não
+                    Certificados</a>
+            </div>
+            <form class="inline" method="post" action="/certificados/upload" enctype="multipart/form-data"
+                style="display:flex;gap:8px;align-items:center">
+                <input type="number" name="certificacao_id" placeholder="ID certificação" required>
+                <input type="file" name="file" accept="application/pdf" required>
+                <button class="btn" type="submit">+ Upload Rápido</button>
+            </form>
+        </div>
+
+        {% if view=='certificados' %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th># Cert.</th>
+                        <th>Professor</th>
+                        <th>Escola</th>
+                        <th>Turma</th>
+                        <th>Arquivo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in certificadas %}
+                    <tr>
+                        <td>{{ c.id }}</td>
+                        <td>{{ c.professor.nome }}</td>
+                        <td>{{ c.professor.escola.nome if c.professor.escola else '—' }}</td>
+                        <td>{{ c.turma.numero }}/{{ c.ano.valor }}</td>
+                        <td>
+                            {% if c.certificado_arquivo %}
+                            <a href="/certificados/{{ c.id }}/download">📜 baixar</a>
+                            {% else %}<span class="muted">sem arquivo</span>{% endif %}
+                        </td>
+                        <td>
+                            <form class="inline" method="post" action="/certificados/upload"
+                                enctype="multipart/form-data" style="display:inline-flex;gap:8px;align-items:center">
+                                <input type="hidden" name="certificacao_id" value="{{ c.id }}">
+                                <input type="file" name="file" accept="application/pdf" required>
+                                <button class="btn" type="submit">Trocar</button>
+                            </form>
+                            <form class="inline" method="post" action="/certificados/delete"
+                                onsubmit="return confirm('Remover arquivo dessa certificação?')">
+                                <input type="hidden" name="certificacao_id" value="{{ c.id }}">
+                                <input type="hidden" name="manter_status" value="sim">
+                                <button class="btn btn-danger" type="submit">Apagar Arquivo</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="muted">Sem certificados</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th># Cert.</th>
+                        <th>Professor</th>
+                        <th>Escola</th>
+                        <th>Turma</th>
+                        <th>Upload</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in nao_certificadas %}
+                    <tr>
+                        <td>{{ c.id }}</td>
+                        <td>{{ c.professor.nome }}</td>
+                        <td>{{ c.professor.escola.nome if c.professor.escola else '—' }}</td>
+                        <td>{{ c.turma.numero }}/{{ c.ano.valor }}</td>
+                        <td>
+                            <form class="inline" method="post" action="/certificados/upload"
+                                enctype="multipart/form-data" style="display:inline-flex;gap:8px;align-items:center">
+                                <input type="hidden" name="certificacao_id" value="{{ c.id }}">
+                                <input type="file" name="file" accept="application/pdf" required>
+                                <button class="btn" type="submit">+ Adicionar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="muted">Todos certificados 🎉</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

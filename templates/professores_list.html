@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Professores · Certificados{% endblock %}
+{% block content %}
+<h1 class="page-title">Professores</h1>
+<p class="subtitle muted">Cadastre professores e (opcionalmente) já crie a certificação em uma turma/ano.</p>
+
+<div class="row">
+    <section class="card span-12">
+        <div class="section-head">
+            <h2 class="section-title">Cadastrar Professor</h2>
+        </div>
+        <form method="post" action="/professores">
+            <div class="row">
+                <div class="span-4">
+                    <label>Nome</label><br />
+                    <input name="nome" placeholder="Nome do professor" required>
+                </div>
+                <div class="span-4">
+                    <label>DDZ</label><br />
+                    <select id="ddzSelect">
+                        <option value="">Filtrar Escolas…</option>
+                        {% for d in ddzs %}<option value="{{ d.id }}">{{ d.nome }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="span-4">
+                    <label>Escola</label><br />
+                    <select name="escola_id" id="escolaSelect" required>
+                        <option value="">Selecione a escola…</option>
+                        {% for e in escolas %}
+                        <option value="{{ e.id }}" data-ddz="{{ e.ddz_id }}">{{ e.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="span-4">
+                    <label>Ano (opcional)</label><br />
+                    <select name="ano_valor" id="anoSelect">
+                        <option value="">—</option>
+                        {% for a in anos %}<option value="{{ a.valor }}">{{ a.valor }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="span-4">
+                    <label>Turma (opcional)</label><br />
+                    <select name="turma_label" id="turmaSelect">
+                        <option value="">—</option>
+                        {% for t in turmas %}
+                        <option value="{{ t.numero }}/{{ t.ano.valor }}" data-ano="{{ t.ano.valor }}">{{ t.numero }}/{{
+                            t.ano.valor }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="span-4" style="display:flex;align-items:end;">
+                    <button class="btn" type="submit">Salvar</button>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="card span-12" style="margin-top:14px;">
+        <div class="section-head">
+            <h2 class="section-title">Lista de Professores</h2>
+            <span class="tag">{{ professores|length if professores else 0 }} registro(s)</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Professor</th>
+                        <th>Escola</th>
+                        <th>DDZ</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in professores %}
+                    <tr>
+                        <td>{{ p.id }}</td>
+                        <td>{{ p.nome }}</td>
+                        <td>{{ p.escola.nome if p.escola else '—' }}</td>
+                        <td>{{ p.escola.ddz.nome if p.escola and p.escola.ddz else '—' }}</td>
+                        <td>
+                            <form class="inline" method="post" action="/professores/{{ p.id }}/delete"
+                                onsubmit="return confirm('Excluir {{ p.nome }}?')">
+                                <button class="btn btn-danger" type="submit">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="muted">Sem registros</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Filtra escolas pelo DDZ escolhido
+    const ddzSel = document.getElementById('ddzSelect');
+    const escolaSel = document.getElementById('escolaSelect');
+    ddzSel?.addEventListener('change', e => {
+        const ddzId = ddzSel.value;
+        [...escolaSel.options].forEach(opt => {
+            if (!opt.value) { opt.hidden = false; return; }
+            opt.hidden = ddzId && opt.dataset.ddz !== ddzId;
+        });
+        escolaSel.value = "";
+    });
+
+    // Filtra turmas pelo ano escolhido
+    const anoSel = document.getElementById('anoSelect');
+    const turmaSel = document.getElementById('turmaSelect');
+    anoSel?.addEventListener('change', () => {
+        const ano = anoSel.value;
+        [...turmaSel.options].forEach(opt => {
+            if (!opt.value) { opt.hidden = false; return; }
+            opt.hidden = ano && opt.dataset.ano !== ano;
+        });
+        turmaSel.value = "";
+    });
+</script>
+{% endblock %}

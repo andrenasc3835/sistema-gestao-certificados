@@ -1,0 +1,318 @@
+/* ===========================
+   Tema azul + Glassmorphism
+   =========================== */
+:root {
+    /* Fundo e acentos (azul/violeta no estilo do mock) */
+    --bg-from: #0f172a;
+    /* slate-900 */
+    --bg-to: #1e293b;
+    /* slate-800 */
+    --accent: #60a5fa;
+    /* blue-400 */
+    --accent-2: #8b5cf6;
+    /* violet-500 */
+
+    --glass: rgba(255, 255, 255, .08);
+    --glass-strong: rgba(255, 255, 255, .14);
+    --stroke: rgba(255, 255, 255, .12);
+
+    --text: #e5e7eb;
+    --muted: #94a3b8;
+
+    --sidebar-w: 260px;
+    --sidebar-w-collapsed: 72px;
+    --radius: 16px;
+    --trans: .25s ease;
+}
+
+* {
+    box-sizing: border-box
+}
+
+html,
+body {
+    height: 100%
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(135deg, var(--bg-from), var(--bg-to));
+    color: var(--text);
+    font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+a {
+    color: inherit;
+    text-decoration: none
+}
+
+/* Layout base */
+.layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    min-height: 100vh;
+    transition: grid-template-columns var(--trans);
+}
+
+/* Sidebar */
+.sidebar {
+    backdrop-filter: blur(12px);
+    background: linear-gradient(180deg, var(--glass), rgba(255, 255, 255, 0.03));
+    border-right: 1px solid var(--stroke);
+    padding: 12px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    z-index: 10;
+    width: var(--sidebar-w);
+    transition: width var(--trans), padding var(--trans);
+    overflow: hidden;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#burger {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid var(--stroke);
+    background: transparent;
+    color: var(--text);
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+#burger .burger-line {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--text);
+    opacity: .9
+}
+
+.logo {
+    height: 50px;
+    width: auto;
+    transition: opacity .2s ease
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 6px;
+    gap: 6px
+}
+
+.nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid transparent
+}
+
+.nav a:hover,
+.nav a.active {
+    background: var(--glass);
+    border-color: var(--stroke)
+}
+
+.nav .icon {
+    width: 22px;
+    text-align: center;
+    opacity: .9
+}
+
+.nav .label {
+    white-space: nowrap
+}
+
+/* Área de conteúdo */
+.content {
+    padding: 24px 28px;
+    transition: padding var(--trans)
+}
+
+/* Estado colapsado */
+body.sidebar-collapsed .layout {
+    grid-template-columns: var(--sidebar-w-collapsed) 1fr
+}
+
+body.sidebar-collapsed .sidebar {
+    width: var(--sidebar-w-collapsed);
+    padding: 12px 8px
+}
+
+body.sidebar-collapsed .logo {
+    opacity: 0;
+    pointer-events: none
+}
+
+body.sidebar-collapsed .nav .label {
+    display: none
+}
+
+body.sidebar-collapsed .brand {
+    justify-content: center
+}
+
+body.sidebar-collapsed #burger {
+    padding: 8px
+}
+
+/* Grid utilitário e cartões (glass) */
+.row {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 14px
+}
+
+.span-12 {
+    grid-column: span 12
+}
+
+.span-8 {
+    grid-column: span 8
+}
+
+.span-6 {
+    grid-column: span 6
+}
+
+.span-4 {
+    grid-column: span 4
+}
+
+.card {
+    background: linear-gradient(180deg, var(--glass), rgba(255, 255, 255, .03));
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .25) inset, 0 10px 20px rgba(2, 8, 23, .22);
+}
+
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px
+}
+
+.section-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700
+}
+
+.page-title {
+    margin: 0 0 6px;
+    font-size: 24px;
+    font-weight: 800
+}
+
+.subtitle {
+    margin: 0 0 14px;
+    color: var(--muted)
+}
+
+/* Chips / Tags */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--stroke);
+    cursor: pointer;
+}
+
+.tag.active {
+    background: var(--glass)
+}
+
+/* Tabelas */
+.table-wrap {
+    overflow: auto
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse
+}
+
+th,
+td {
+    padding: 10px;
+    border-bottom: 1px solid var(--stroke);
+    text-align: left
+}
+
+.muted {
+    color: var(--muted)
+}
+
+/* Inputs / botões (básicos) */
+input,
+select {
+    background: transparent;
+    border: 1px solid var(--stroke);
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: var(--text)
+}
+
+input[type=file] {
+    border: none
+}
+
+.btn {
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--stroke);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer
+}
+
+.btn:hover {
+    background: var(--glass)
+}
+
+.btn-danger {
+    border-color: #7a2a2a;
+    color: #ffb4b4
+}
+
+/* Acessibilidade motion-reduce */
+@media (prefers-reduced-motion: reduce) {
+
+    .layout,
+    .sidebar,
+    .content {
+        transition: none
+    }
+}
+
+/* Ocultar barra de rolagem da sidebar, mas manter scroll */
+.nav {
+    overflow-y: auto;
+    /* mantém o scroll funcional */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge antigo */
+}
+
+.nav::-webkit-scrollbar {
+    /* Chrome, Edge, Safari */
+    width: 0;
+    height: 0;
+}

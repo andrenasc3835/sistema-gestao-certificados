@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{% block title %}Sistema de Gestão de Certificados ARDAGH{% endblock %}</title>
+
+    <link rel="stylesheet" href="/static/app.css" />
+
+    <style>
+        /* ========= Paleta azul + glass ========= */
+        :root {
+            --bg-from: #0f172a;
+            /* slate-900 */
+            --bg-to: #1e293b;
+            /* slate-800 */
+            --glass: rgba(255, 255, 255, .08);
+            --stroke: rgba(255, 255, 255, .12);
+            --text: #e7eaf0;
+            --muted: #94a3b8;
+
+            --sidebar-w: 260px;
+            --sidebar-w-collapsed: 72px;
+            --radius: 16px;
+            --trans: .25s ease;
+
+            --brand-h: 64px;
+            /* altura do cabeçalho da sidebar */
+            --logo-h: 86px;
+            /* altura da logo quando expandido */
+        }
+
+        /* ---- Sidebar compacta: menos altura e espaçamento ---- */
+        .nav a {
+            min-height: 40px;
+            /* antes 48px */
+            padding: 8px 10px;
+            /* antes 10px 12px */
+            margin: 4px 0;
+            /* antes 6px 0 */
+            gap: 8px;
+            /* antes 10px */
+        }
+
+        .nav .icon {
+            width: 18px;
+            /* antes 22px */
+            font-size: 16px;
+            /* controla tamanho do emoji */
+            opacity: .85;
+        }
+
+        body.sidebar-collapsed .nav a {
+            padding: 8px;
+            /* centralizado e menor */
+            margin: 3px 0;
+        }
+
+        body.sidebar-collapsed .nav .icon {
+            font-size: 15px;
+            width: auto;
+        }
+
+
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, var(--bg-from), var(--bg-to));
+            color: var(--text);
+            font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* ===== Layout base ===== */
+        select {
+            background-color: #1e293b;
+            /* fundo escuro */
+            color: white;
+            /* texto branco */
+            border: 1px solid #334155;
+            /* borda discreta */
+            border-radius: 6px;
+            padding: 6px;
+        }
+
+        select option {
+            background-color: #1e293b;
+            color: white;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-w) 1fr;
+            min-height: 100vh;
+            transition: grid-template-columns var(--trans);
+        }
+
+        .sidebar {
+            display: flex;
+            /* << vira coluna */
+            flex-direction: column;
+            backdrop-filter: blur(12px);
+            background: var(--glass);
+            border-right: 1px solid var(--stroke);
+            padding: 12px;
+            /* padding menor + consistente */
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow: hidden;
+            /* scroll vai para o .nav */
+            transition: width var(--trans), padding var(--trans);
+            width: var(--sidebar-w);
+        }
+
+        .content {
+            padding: 24px 28px;
+            transition: padding var(--trans);
+        }
+
+        /* ===== Brand / burger / logo ===== */
+        .brand {
+            position: sticky;
+            /* << fica sempre visível */
+            top: 8px;
+            z-index: 2;
+            height: var(--brand-h);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            margin: 0 0 12px 0;
+            border-bottom: 1px solid var(--stroke);
+            background: transparent;
+        }
+
+        #burger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            border: 1px solid var(--stroke);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .06);
+            color: var(--text);
+        }
+
+        #burger .line {
+            width: 20px;
+            height: 2px;
+            background: var(--text);
+            opacity: .9;
+            display: block;
+            margin: 2px 0;
+        }
+
+        .logo {
+            height: var(--logo-h);
+            width: auto;
+            transition: opacity .18s ease, width .18s ease, height .18s ease;
+        }
+
+        /* ===== Nav ===== */
+        .nav {
+            flex: 1;
+            /* ocupa todo o restante da altura */
+            overflow-y: auto;
+            /* << rolagem aqui */
+            padding: 8px 6px 14px;
+        }
+
+        .nav a {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            margin: 6px 0;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text);
+            background: transparent;
+            border: 1px solid transparent;
+            min-height: 48px;
+            /* “botão” confortável */
+        }
+
+        .nav a.active,
+        .nav a:hover {
+            background: var(--glass);
+            border-color: var(--stroke);
+        }
+
+        .icon {
+            width: 22px;
+            text-align: center;
+            opacity: .9;
+        }
+
+        .label {
+            white-space: nowrap;
+        }
+
+        /* ===== Utilitários ===== */
+        .row {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 14px
+        }
+
+        .span-12 {
+            grid-column: span 12
+        }
+
+        .span-8 {
+            grid-column: span 8
+        }
+
+        .span-6 {
+            grid-column: span 6
+        }
+
+        .span-4 {
+            grid-column: span 4
+        }
+
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--stroke);
+            border-radius: 16px;
+            padding: 16px
+        }
+
+        .section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px
+        }
+
+        .section-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--stroke);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text)
+        }
+
+        .tag.active {
+            background: var(--glass)
+        }
+
+        .table-wrap {
+            overflow: auto
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid var(--stroke);
+            text-align: left
+        }
+
+        .muted {
+            opacity: .75
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--stroke);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer
+        }
+
+        .btn:hover {
+            background: var(--glass)
+        }
+
+        .btn-danger {
+            border-color: #7a2a2a
+        }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        form.inline {
+            display: inline
+        }
+
+        input,
+        select {
+            background: transparent;
+            border: 1px solid var(--stroke);
+            border-radius: 10px;
+            padding: 8px 10px;
+            color: var(--text)
+        }
+
+        input[type="file"] {
+            border: none
+        }
+
+        .page-title {
+            margin: 0 0 6px;
+            font-size: 22px;
+            font-weight: 700
+        }
+
+        .subtitle {
+            margin: 0 0 14px
+        }
+
+        .accordion-item {
+            border: 1px solid var(--stroke);
+            border-radius: 14px;
+            margin-bottom: 10px;
+            overflow: hidden
+        }
+
+        .accordion-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            background: var(--glass);
+            cursor: pointer
+        }
+
+        .accordion-body {
+            padding: 12px 14px;
+            display: none
+        }
+
+        .right {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        /* ===== Estado colapsado ===== */
+        body.sidebar-collapsed .layout {
+            grid-template-columns: var(--sidebar-w-collapsed) 1fr;
+        }
+
+        body.sidebar-collapsed .sidebar {
+            width: var(--sidebar-w-collapsed);
+            padding: 12px 8px;
+        }
+
+        body.sidebar-collapsed .brand {
+            justify-content: center;
+        }
+
+        body.sidebar-collapsed .logo {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            /* some de verdade */
+        }
+
+        body.sidebar-collapsed .nav .label {
+            display: none;
+        }
+
+        body.sidebar-collapsed .nav a {
+            justify-content: center;
+            padding: 10px 8px;
+        }
+
+        /* centraliza ícones */
+    </style>
+
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="brand">
+                <!-- botão hamburguer -->
+                <button id="burger" aria-label="Alternar menu" title="Alternar menu">
+                    <span class="line"></span><span class="line"></span><span class="line"></span>
+                </button>
+                <!-- sua logo -->
+                <img src="/static/img/logo.svg" class="logo" alt="Logo">
+            </div>
+
+            <nav class="nav">
+                <a href="/visao-geral" class="{% if request.url.path.startswith('/visao-geral') %}active{% endif %}">
+                    <span class="icon">🏠</span><span class="label">Visão Geral</span>
+                </a>
+                <a href="/ddz" class="{% if request.url.path.startswith('/ddz') %}active{% endif %}">
+                    <span class="icon">🗺️</span><span class="label">DDZ</span>
+                </a>
+                <a href="/escolas" class="{% if request.url.path.startswith('/escolas') %}active{% endif %}">
+                    <span class="icon">🏫</span><span class="label">Escolas</span>
+                </a>
+                <a href="/professores" class="{% if request.url.path.startswith('/professores') %}active{% endif %}">
+                    <span class="icon">👩‍🏫</span><span class="label">Professores</span>
+                </a>
+                <a href="/anos" class="{% if request.url.path.startswith('/anos') %}active{% endif %}">
+                    <span class="icon">📅</span><span class="label">Anos</span>
+                </a>
+                <a href="/turmas" class="{% if request.url.path.startswith('/turmas') %}active{% endif %}">
+                    <span class="icon">🧩</span><span class="label">Turmas</span>
+                </a>
+                <a href="/certificados" class="{% if request.url.path.startswith('/certificados') %}active{% endif %}">
+                    <span class="icon">📜</span><span class="label">Certificados</span>
+                </a>
+                <a href="/importar" class="{% if request.url.path.startswith('/importar') %}active{% endif %}">
+                    <span class="icon">⬆️</span><span class="label">Importar Dados</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% block scripts %}{% endblock %}
+    <script>
+        // retrai/expande sidebar e persiste estado
+        const burger = document.getElementById('burger');
+        burger?.addEventListener('click', () => {
+            document.body.classList.toggle('sidebar-collapsed');
+            try {
+                sessionStorage.setItem('sb-collapsed',
+                    document.body.classList.contains('sidebar-collapsed') ? '1' : '0');
+            } catch (e) { }
+            // força reflow nos gráficos (Chart.js) após mudança de largura
+            window.dispatchEvent(new Event('resize'));
+        });
+        // restaura estado salvo
+        try {
+            if (sessionStorage.getItem('sb-collapsed') === '1') {
+                document.body.classList.add('sidebar-collapsed');
+            }
+        } catch (e) { }
+    </script>
+</body>
+
+</html>

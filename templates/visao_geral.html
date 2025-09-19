@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Sistema de Gestão de Certificados · Visão Geral{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Sistema de Gestão de Certificados ARDAGH</h1>
+<p class="subtitle">Visão Geral</p>
+
+<!-- Chips dinâmicos -->
+<div class="row">
+    <section class="card span-12">
+        <div class="chips" id="chips"></div>
+    </section>
+</div>
+
+<!-- Gráficos (pizza) -->
+<div class="row" style="margin-top:14px;">
+    <section class="card span-4">
+        <div class="section-head">
+            <h2 class="section-title">Por DDZ</h2>
+        </div>
+        <canvas id="chartDDZ"></canvas>
+    </section>
+    <section class="card span-4">
+        <div class="section-head">
+            <h2 class="section-title">Por Escola</h2>
+        </div>
+        <canvas id="chartEscola"></canvas>
+    </section>
+    <section class="card span-4">
+        <div class="section-head">
+            <h2 class="section-title">Por Ano</h2>
+        </div>
+        <canvas id="chartAno"></canvas>
+    </section>
+</div>
+
+<!-- Tabela -->
+<div class="row" style="margin-top:14px;">
+    <section class="card span-12">
+        <div class="section-head">
+            <h2 class="section-title">Registros</h2>
+            <span class="tag" id="countTag">0 registro(s)</span>
+        </div>
+        <div class="table-wrap">
+            <table id="tabela">
+                <thead>
+                    <tr>
+                        <th>DDZ</th>
+                        <th>Escola</th>
+                        <th>Professor</th>
+                        <th>Ano</th>
+                        <th>Turma</th>
+                        <th>Cert.</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    (function () {
+        const PALETTE = ["#60a5fa", "#93c5fd", "#a78bfa", "#c4b5fd", "#38bdf8", "#818cf8", "#7dd3fc", "#bfdbfe"];
+        const charts = {};
+
+        function toastError(msg) {
+            let box = document.getElementById("debugBox");
+            if (!box) {
+                box = document.createElement("div");
+                box.id = "debugBox";
+                box.style.cssText = "position:fixed;right:16px;bottom:16px;z-index:1000;background:rgba(255,80,80,.10);border:1px solid rgba(255,80,80,.35);padding:10px 12px;border-radius:10px;color:#fca5a5;backdrop-filter:blur(6px);max-width:60vw";
+                document.body.appendChild(box);
+            }
+            box.textContent = msg;
+        }
+        function ensureEl(id) {
+            const el = document.getElementById(id);
+            if (!el) { console.error("Elemento não encontrado:", id); toastError("Elemento não encontrado: #" + id); }
+            return el;
+        }
+
+        function pie(id, labels, values, title) {
+            const ctx = ensureEl(id);
+            if (!ctx) return;
+            const data = { labels, datasets: [{ data: values, label: title, backgroundColor: PALETTE.slice(0, Math.max(3, values.length)) }] };
+            const opts = {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: 'white' } }, // legendas brancas
+                    tooltip: { enabled: true }
+                }
+            };
+            if (!charts[id]) charts[id] = new Chart(ctx, { type: "pie", data, options: opts });
+            else { charts[id].data = data; charts[id].update(); }
+        }
+
+        async function load(turma = "") {
+            const url = new URL("/api/visao-geral", location.origin);
+            if (turma) url.searchParams.set("turma", turma);
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                const data = await res.json();
+
+                // gráficos
+                pie("chartDDZ", (data.por_ddz || []).map(x => x.label), (data.por_ddz || []).map(x => x.value), "Por DDZ");
+                pie("chartEscola", (data.por_escola || []).map(x => x.label), (data.por_escola || []).map(x => x.value), "Por Escola");
+                pie("chartAno", (data.por_ano || []).map(x => x.label), (data.por_ano || []).map(x => x.value), "Por Ano");
+
+                // tabela
+                const tbody = ensureEl("tabela")?.querySelector("tbody");
+                if (tbody) {
+                    tbody.innerHTML = "";
+                    for (const r of (data.rows || [])) {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+            <td>${r.ddz}</td>
+            <td>${r.escola}</td>
+            <td>${r.professor}</td>
+            <td>${r.ano}</td>
+            <td>${r.turma}</td>
+            <td style="text-align:center;">${r.has_cert ? `<a href="/certificados/${r.cert_id}/download" title="Baixar">📜</a>` : '<span class="muted">—</span>'}</td>
+          `;
+                        tbody.appendChild(tr);
+                    }
+                }
+                const tag = ensureEl("countTag");
+                if (tag) tag.textContent = `${(data.rows || []).length} registro(s)`;
+            } catch (err) {
+                console.error("Falha /api/visao-geral:", err);
+                toastError("Falha ao carregar dados do dashboard: " + err.message);
+            }
+        }
+
+        // ---- Chips dinâmicos (construídos a partir de rows[].turma) ----
+        async function buildChips() {
+            const wrap = document.getElementById("chips");
+            if (!wrap) return;
+            try {
+                const res = await fetch("/api/visao-geral"); // sem filtro
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                const data = await res.json();
+
+                const set = new Set((data.rows || []).map(r => String(r.turma)).filter(Boolean));
+                const turmas = Array.from(set).sort((a, b) => {
+                    const [na, aa] = a.split("/").map(Number);
+                    const [nb, ab] = b.split("/").map(Number);
+                    return aa !== ab ? aa - ab : na - nb;
+                });
+
+                wrap.innerHTML = "";
+                const mk = (label, turma, active = false) => {
+                    const el = document.createElement("a");
+                    el.className = "tag" + (active ? " active" : "");
+                    el.textContent = label;
+                    if (turma) el.dataset.turma = turma;
+                    wrap.appendChild(el);
+                };
+                mk("Todas", "", true);
+                turmas.forEach(t => mk(t, t));
+
+                // clique delegando
+                wrap.addEventListener("click", (e) => {
+                    if (e.target.classList.contains("tag")) {
+                        wrap.querySelectorAll(".tag").forEach(x => x.classList.remove("active"));
+                        e.target.classList.add("active");
+                        load(e.target.dataset.turma || "");
+                    }
+                });
+            } catch (err) {
+                console.error("Falha ao construir chips:", err);
+            }
+        }
+
+        // resize charts quando a sidebar muda
+        window.addEventListener("resize", () => {
+            Object.values(charts).forEach(ch => ch && ch.resize());
+        });
+
+        // start
+        (async () => { await buildChips(); await load(); })();
+    })();
+</script>
+{% endblock %}
